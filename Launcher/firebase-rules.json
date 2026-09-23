@@ -1,0 +1,28 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      "$uid": {
+        ".write": true
+      }
+    },
+    "presence": {
+      ".read": true,
+      "$uid": {
+        ".write": true
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "friendRequests": {
+      "$uid": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}

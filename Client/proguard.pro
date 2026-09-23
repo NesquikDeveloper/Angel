@@ -1,0 +1,43 @@
+-keep class net.minecraft.** { *; }
+-keep class net.minecraftforge.** { *; }
+-keep class com.mojang.** { *; }
+-keep class org.spongepowered.asm.** { *; }
+-keep class org.lwjgl.** { *; }
+-keep class net.java.games.** { *; }
+-keep class paulscode.** { *; }
+-keep class com.jcraft.** { *; }
+-keep class io.github.angelclient.client.tweak.Tweaker { *; }
+-keep class io.github.angelclient.client.PreMain { *; }
+-keep class io.github.angelclient.client.mixin.** { *; }
+-keep class io.github.angelclient.client.Client { *; }
+-keep class io.github.angelclient.client.BostaClientMod { *; }
+-keep class io.github.angelclient.client.util.update.AutoUpdater { *; }
+-keep class io.github.angelclient.client.cosmetic.** { *; }
+-keep class io.github.angelclient.client.nametag.** { *; }
+-keepclassmembers class * { @com.google.gson.annotations.Expose <fields>; }
+-keepclassmembers class * { @com.google.gson.annotations.SerializedName <fields>; }
+-keepclassmembers class * { @io.github.angelclient.client.event.EventHandler <methods>; }
+-keep class * implements java.io.Serializable { *; }
+-keep class * extends io.github.angelclient.client.mod.Mod { *; }
+-keep class * extends io.github.angelclient.client.mod.hud.HudMod { *; }
+-keepdirectories "**"
+-dontwarn javax.annotation.**
+-dontwarn com.google.**
+-dontwarn org.lwjgl.**
+-dontwarn net.java.games.**
+-dontwarn paulscode.**
+-dontwarn org.apache.**
+-dontwarn com.jcraft.**
+-dontwarn org.slf4j.**
+-dontwarn com.sun.**
+-dontwarn net.minecraft.**
+-dontwarn com.mojang.**
+-dontwarn com.jagrosh.**
+-dontwarn org.json.**
+-dontnote **
+-dontoptimize
+-dontwarn com.replaymod.**
+-keep class com.replaymod.** { *; }
+-keep class com.google.api.** { *; }
+-ignorewarnings
+-verbose

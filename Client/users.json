@@ -1,0 +1,41 @@
+{
+  "capes": [
+    {
+      "id": "AngelCape",
+      "name": "Capa Angel",
+      "path": "capes/AngelCape.png"
+    },
+    {
+      "id": "SamocaCape",
+      "name": "Capa do samocakkkkk",
+      "path": "capes/Cape_base.png"
+    },
+    {
+      "id": "CreeperYellow",
+      "name": "Kitty x Creeper",
+      "path": "capes/Creeperxkitty.png"
+     },
+     {
+      "id": "SamuelPlayerCape",
+      "name": "SamuelPl4yer Cape",
+      "path": "capes/Samuel.png"
+    },
+       {
+      "id": "JesusCape",
+      "name": "Jesus Cape",
+      "path": "capes/JesusCape.png"
+    },
+      {
+      "id": "KowCape",
+      "name": "Kow Cape",
+      "path": "capes/KowCape.png"
+    },
+         {
+      "id": "BlackAngel",
+      "name": "Black Angel",
+      "path": "capes/AngelBlack.png"
+    },
+  ]
+}
+
+

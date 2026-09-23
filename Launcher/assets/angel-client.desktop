@@ -1,0 +1,10 @@
+[Desktop Entry]
+
+Name=Bosta Client
+Comment=Simple yet feature-rich open-source Minecraft client.
+GenericName=Bosta Client
+Exec=angel-client %U
+Icon=angel-client.png
+Type=Application
+StartupNotify=true
+Categories=Game;

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bosta Client</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="bg-noise"></div>
+</div>
+
+<div class="drag-region invisible"></div>
+
+<!-- ════ LOGIN ════ -->
+<div class="glass-panel login" id="loginScreen">
+  <div class="login-inner">
+    <button class="btn btn-ghost back-button invisible back-to-main-button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Voltar
+    </button>
+    <div class="login-content">
+      <div class="login-logo-mark">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M12 20c0 0-8-4-8-10a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 6-8 10-8 10z"/>
+          <path d="M8 10c-1-2-3-3-5-2"/>
+          <path d="M16 10c1-2 3-3 5-2"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Bosta Client</h1>
+      <p class="login-sub">Faça login para continuar</p>
+
+      <div id="loginAccountsList" style="display:none; width:100%; margin-bottom:16px;">
+        <div class="login-divider">Escolha uma conta</div>
+        <div id="loginAccList" class="login-accounts-list"></div>
+        <div class="sep"></div>
+      </div>
+
+      <button class="btn btn-primary microsoft-login-button" id="microsoftLoginBtn" style="width:100%;">
+        <svg width="16" height="16" viewBox="0 0 23 23" fill="none">
+          <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
+          <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
+          <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
+          <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+        </svg>
+        Entrar com Microsoft
+      </button>
+
+      <button class="btn btn-ghost offline-login-button" id="offlineLoginBtn" style="width:100%; margin-top:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        Entrar Offline
+      </button>
+
+      <button class="btn btn-ghost" id="skipLoginBtn" style="width:100%; margin-top:8px; display:none;">
+        Continuar sem conta
+      </button>
+
+      <p class="login-note">Apenas contas Microsoft (Java Edition) são suportadas.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════ OFFLINE USERNAME MODAL ════ -->
+<div id="offlineModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+  <div style="background:var(--bg-secondary, #1e1e2e); border:1px solid var(--border, rgba(255,255,255,0.1)); border-radius:12px; padding:28px 32px; width:320px; display:flex; flex-direction:column; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <h2 style="margin:0; font-size:1rem; font-weight:600;">Login Offline</h2>
+    <p style="margin:0; font-size:0.8rem; opacity:0.6;">Digite o nome de usuário que será exibido no jogo.</p>
+    <input id="offlineUsernameInput" type="text" placeholder="Seu nickname" maxlength="16"
+      style="background:var(--bg-tertiary, rgba(255,255,255,0.05)); border:1px solid var(--border, rgba(255,255,255,0.1)); border-radius:8px; color:inherit; font-size:0.9rem; outline:none; padding:10px 14px; width:100%; box-sizing:border-box;"/>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button id="offlineModalCancel" class="btn btn-ghost" style="flex:1;">Cancelar</button>
+      <button id="offlineModalConfirm" class="btn btn-primary" style="flex:1;">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LAUNCHER ════ -->
+<div class="glass-panel main" id="mainLauncher">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Mostrar menos">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="sidebar-top">
+      <div class="brand-mark">
+        <img src="assets/logo.png" id="sidebarLogo" style="width:100%;height:100%;object-fit:contain;" alt="Bosta Client"/>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <nav class="tabs">
+      <button class="tab-item selected-tab about-tab" data-tab="about">
+        <span class="tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+        </span>
+        <span class="tab-label">Jogar</span>
+      </button>
+      <button class="tab-item mods-tab" data-tab="mods">
+        <span class="tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/>
+            <rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </span>
+        <span class="tab-label">Mods</span>
+      </button>
+      <button class="tab-item coins-tab" data-tab="coins">
+        <span class="tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M14.5 9a3 3 0 0 0-5 2.2c0 2.4 5 3.8 5 6a3 3 0 0 1-5 .8"/>
+            <line x1="12" y1="6" x2="12" y2="8"/>
+            <line x1="12" y1="16" x2="12" y2="18"/>
+          </svg>
+        </span>
+        <span class="tab-label">Moedas</span>
+      </button>
+      <button class="tab-item news-tab" data-tab="news">
+        <span class="tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+            <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/>
+          </svg>
+        </span>
+        <span class="tab-label">Notícias</span>
+      </button>
+      <button class="tab-item settings-tab-btn" data-tab="settings">
+        <span class="tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </span>
+        <span class="tab-label">Config</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+
+    <!-- HOME -->
+    <div class="about tab-content">
+      <!-- CARROSSEL DE SKINS -->
+      <div class="hero-carousel">
+        <button class="carousel-arrow carousel-prev" id="carouselPrev">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-slide active">
+            <img src="assets/angel_client_logo_with_text.svg" alt="Bosta Client" class="carousel-logo"/>
+          </div>
+        </div>
+        <button class="carousel-arrow carousel-next" id="carouselNext">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <!-- PLAY -->
+      <div class="center-play-area">
+        <img src="assets/angel_client_logo_with_text.svg" alt="Bosta Client" class="play-logo"/>
+        
+        <!-- SALDO DE MOEDAS -->
+        <div class="home-coins-balance" id="homeCoinsBalance" style="display:none;">
+          <div class="spinner" style="width:14px; height:14px; border-width:2px;"></div>
+        </div>
+        
+        <!-- SELECTOR DE VERSÃO -->
+        <div class="version-selector-row">
+          <div class="version-selector-container">
+            <button class="btn version-selector-btn" id="versionSelectorBtn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+              <span class="version-label">VERSION</span>
+              <span id="selectedVersionDisplay">1.8.9</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="version-arrow"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="version-dropdown invisible" id="versionDropdown"></div>
+          </div>
+          <div class="account-switch-btn-wrap">
+            <button class="btn account-switch-btn" id="playAccountBtn" title="Escolher conta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div class="play-account-dropdown invisible" id="playAccountDropdown"></div>
+          </div>
+        </div>
+
+        <p id="launch-note" class="invisible launch-note-center"></p>
+        <button class="btn play-button" id="launch-button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Play
+        </button>
+        
+        <div id="progress-container" class="invisible" style="width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+          </div>
+          <span class="progress-label" id="progressLabel"></span>
+        </div>
+
+        <!-- BARRA DE SERVIDORES RÁPIDOS -->
+        <div class="quick-server-bar" id="quickServerBar"></div>
+      </div>
+
+      <!-- NEWS CARDS -->
+      <div class="news-cards-row" id="newsCardsRow">
+        <div class="news-card-placeholder">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div class="news tab-content invisible">
+      <div class="discord-news-container">
+        <div class="discord-news-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:#5865f2; flex-shrink:0;">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+          </svg>
+          <span class="discord-news-title"># att-logs — Atualizações</span>
+          <a class="link-pill open-in-browser discord-news-open" href="https://discord.gg/qK5ndDDJUg" style="margin-left:auto;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Abrir Discord
+          </a>
+        </div>
+        <div class="discord-feed-wrap" id="discordFeed">
+          <div class="discord-widget-loading" id="discordFeedLoading">
+            <div class="spinner"></div>
+            <p class="empty-title">Carregando atualizações...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODS -->
+    <div class="mods tab-content invisible">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><rect x="15" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+        <p class="empty-title">Mods em Breve</p>
+        <p class="empty-sub">Bosta Client mods estão em desenvolvimento.</p>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="accounts-panel tab-content invisible">
+      <div class="panel-header">
+        <span class="panel-title">Gerenciar Contas</span>
+      </div>
+      <div class="accounts-grid" id="accountsGrid"></div>
+    </div>
+
+    <!-- COINS -->
+    <div class="coins-panel tab-content invisible">
+      <div class="coins-container">
+
+        <!-- HEADER -->
+        <div class="coins-header">
+          <div class="coins-header-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M14.5 9a3 3 0 0 0-5 2.2c0 2.4 5 3.8 5 6a3 3 0 0 1-5 .8"/>
+              <line x1="12" y1="6" x2="12" y2="8"/>
+              <line x1="12" y1="16" x2="12" y2="18"/>
+            </svg>
+          </div>
+          <div>
+            <div class="coins-header-title">Angel Coins</div>
+            <div class="coins-header-sub">Troque moedas por cosméticos no servidor</div>
+          </div>
+          <button class="btn btn-ghost btn-sm coins-refresh-btn" id="coinsRefreshBtn" title="Atualizar saldo" style="margin-left:auto;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Atualizar
+          </button>
+        </div>
+
+        <!-- VINCULAR DISCORD -->
+        <div class="coins-link-section" id="coinsLinkSection">
+          <div class="coins-section-title">Conectar conta Discord</div>
+          <p class="coins-section-desc">Vincule sua conta do Discord para ver seu saldo de moedas. Você será redirecionado para autorizar no navegador.</p>
+
+          <!-- Estado: sem conta Minecraft -->
+          <div id="coinsNoAccount" style="display:none;">
+            <div class="coins-no-account">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Faça login com uma conta Minecraft primeiro.
+            </div>
+          </div>
+
+          <!-- Estado: pronto para vincular -->
+          <div id="coinsReadyToLink">
+            <div class="coins-oauth-card" id="coinsOAuthCard">
+              <div class="coins-oauth-avatar" id="coinsOAuthAvatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:#5865f2;">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                </svg>
+              </div>
+              <div class="coins-oauth-info">
+                <div class="coins-oauth-nick" id="coinsOAuthNick">—</div>
+                <div class="coins-oauth-sub">Conta Minecraft ativa</div>
+              </div>
+            </div>
+            <button class="btn btn-primary coins-discord-btn" id="coinsDiscordOAuthBtn" style="width:100%; margin-top:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+              </svg>
+              Conectar com Discord
+            </button>
+          </div>
+
+          <!-- Estado: aguardando autorização no browser -->
+          <div id="coinsWaitingAuth" style="display:none;">
+            <div class="coins-waiting-card">
+              <div class="spinner" style="border-top-color:#5865f2; border-color:rgba(88,101,242,0.2);"></div>
+              <div>
+                <div class="coins-waiting-title">Aguardando autorização...</div>
+                <div class="coins-waiting-sub">Autorize no navegador que foi aberto e volte aqui.</div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="coinsCancelAuthBtn" style="width:100%; margin-top:10px;">Cancelar</button>
+          </div>
+
+          <div class="coins-link-hint" id="coinsLinkHint"></div>
+        </div>
+
+        <!-- SALDO CARD -->
+        <div class="coins-balance-section" id="coinsBalanceSection" style="display:none;">
+          <div class="coins-balance-card">
+            <div class="coins-balance-label">Seu saldo</div>
+            <div class="coins-balance-amount" id="coinsBalanceAmount">
+              <div class="spinner"></div>
+            </div>
+            <div class="coins-balance-discord" id="coinsBalanceDiscord"></div>
+            <button class="btn btn-ghost btn-sm" id="unlinkDiscordBtn" style="margin-top:10px; font-size:0.68em; opacity:0.5;">
+              Desvincular conta
+            </button>
+          </div>
+
+          <!-- STATS EXTRAS -->
+          <div class="coins-stats-grid" id="coinsStatsGrid"></div>
+        </div>
+
+        <!-- RESGATAR CÓDIGO -->
+        <div class="coins-redeem-section">
+          <div class="coins-section-title">Resgatar código</div>
+          <p class="coins-section-desc">Tem um código de moedas? Insira abaixo para resgatar.</p>
+          <div class="coins-link-row">
+            <input class="input" type="text" id="redeemCodeInput" placeholder="Código de resgate" style="flex:1; text-transform:uppercase;" maxlength="32"/>
+            <button class="btn btn-primary" id="redeemCodeBtn">Resgatar</button>
+          </div>
+          <div class="coins-redeem-result" id="coinsRedeemResult"></div>
+        </div>
+
+        <!-- SALDO POR NICK -->
+        <div class="coins-nick-section">
+          <div class="coins-section-title">Consultar por nick</div>
+          <p class="coins-section-desc">Veja o saldo de qualquer jogador pelo nick do Minecraft.</p>
+          <div class="coins-link-row">
+            <input class="input" type="text" id="nickQueryInput" placeholder="Nick do jogador" maxlength="16" style="flex:1;"/>
+            <button class="btn btn-ghost" id="nickQueryBtn">Consultar</button>
+          </div>
+          <div class="coins-nick-result" id="coinsNickResult"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="settings tab-content invisible">
+      <div class="settings-layout">
+        <nav class="settings-nav">
+          <button class="settings-nav-item selected" data-stab="launcher">Launcher</button>
+          <button class="settings-nav-item" data-stab="game">Game</button>
+          <button class="settings-nav-item" data-stab="social">Social</button>
+          <button class="settings-nav-item" data-stab="conta">Conta</button>
+          <button class="settings-nav-item" data-stab="pagamentos">Pagamentos</button>
+          <button class="settings-nav-item" data-stab="privacidade">Privacidade</button>
+          <button class="settings-nav-item" data-stab="debug">Debug</button>
+          <button class="settings-nav-item" data-stab="premium">Premium</button>
+        </nav>
+        <div class="settings-content">
+
+          <!-- LAUNCHER -->
+          <div class="settings-page visible" data-spage="launcher">
+            <div class="settings-section">
+              <h3 class="settings-section-title">Geral</h3>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <span>Fechar ao iniciar</span>
+                  <small>Minimiza o launcher ao abrir o jogo</small>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" class="close-on-launch" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <span>Atualizações automáticas</span>
+                  <small>Baixa atualizações em segundo plano</small>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" class="auto-update" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">Caminhos</h3>
+              <div class="path-row">
+                <div class="path-info">
+                  <span class="path-label">Pasta do Minecraft</span>
+                  <span class="path-value minecraft-folder-path">Auto-detectado</span>
+                </div>
+                <button class="btn btn-ghost btn-sm minecraft-folder">Alterar</button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">Avançado</h3>
+              <div class="path-row">
+                <div class="path-info">
+                  <span class="path-label">Local do JRE</span>
+                  <span class="path-value jre-location">Auto-detectado</span>
+                </div>
+                <div class="path-actions">
+                  <button class="btn btn-ghost btn-sm jre-location-change">Alterar</button>
+                  <button class="btn btn-ghost btn-sm jre-location-reset">Resetar</button>
+                </div>
+              </div>
+              <div class="jvm-row">
+                <span class="path-label">Argumentos JVM</span>
+                <input type="text" class="input jvm-arguments" placeholder="Sem argumentos adicionais"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- GAME -->
+          <div class="settings-page" data-spage="game">
+            <div class="settings-section">
+              <h3 class="settings-section-title">Performance</h3>
+              <div class="memory-box">
+                <div class="memory-header">
+                  <span>Memória Alocada</span>
+                  <span class="memory-label" id="memVal">2 GB</span>
+                </div>
+                <input type="range" class="memory styled-range" min="512" max="16384" step="256" id="memSlider">
+              </div>
+            </div>
+            <div class="settings-section">
+              <h3 class="settings-section-title">Modificações</h3>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <span>Instalar OptiFine</span>
+                  <small>Melhora a performance do jogo</small>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" class="optifine">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- SOCIAL -->
+          <div class="settings-page" data-spage="social">
+            <div class="empty-state">
+              <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <p class="empty-title">Integrações Sociais</p>
+              <p class="empty-sub">Conecte suas redes sociais e compartilhe suas estatísticas.</p>
+            </div>
+          </div>
+
+          <!-- CONTA -->
+          <div class="settings-page" data-spage="conta">
+            <div class="settings-section">
+              <h3 class="settings-section-title">Conta Bosta Client</h3>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <span>Email</span>
+                  <small>Email associado à sua conta</small>
+                </div>
+                <input class="input" type="email" placeholder="email@exemplo.com" style="width:200px; font-size:0.82em;"/>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-label">
+                  <span>Alterar senha</span>
+                  <small>Mínimo 8 caracteres</small>
+                </div>
+                <button class="btn btn-ghost btn-sm">Alterar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PAGAMENTOS -->
+          <div class="settings-page" data-spage="pagamentos">
+            <div class="empty-state">
+              <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3 3 0 0 0-5 2.2c0 2.4 5 3.8 5 6a3 3 0 0 1-5 .8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/></svg></div>
+              <p class="empty-title">Pagamentos</p>
+              <p class="empty-sub">Gerencie seus métodos de pagamento e veja seu histórico.</p>
+            </div>
+          </div>
+
+          <!-- PRIVACIDADE -->
+          <div class="settings-page" data-spage="privacidade">
+            <div class="empty-state">
+              <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <p class="empty-title">Privacidade</p>
+              <p class="empty-sub">Controle suas preferências de privacidade e dados compartilhados.</p>
+            </div>
+          </div>
+
+          <!-- DEBUG -->
+          <div class="settings-page" data-spage="debug">
+            <div class="empty-state">
+              <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+              <p class="empty-title">Debug</p>
+              <p class="empty-sub">Informações técnicas e logs do launcher.</p>
+            </div>
+          </div>
+
+          <!-- PREMIUM -->
+          <div class="settings-page" data-spage="premium">
+            <div class="empty-state">
+              <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+              <p class="empty-title">Angel Premium</p>
+              <p class="empty-sub">Desbloqueie recursos exclusivos com a assinatura Premium.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <!-- Player head - abre dropdown Perfil / Config Conta / Sair -->
+    <button class="rp-head-btn" id="rpHeadBtn" title="Conta">
+      <div class="rp-head-avatar" id="rpHeadAvatar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </button>
+
+    <div class="rp-divider"></div>
+
+    <!-- Bell - notificações -->
+    <button class="rp-action-btn" id="rpBellBtn" title="Notificações">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+
+    <!-- Person - amigos -->
+    <button class="rp-action-btn" id="rpFriendsBtn" title="Amigos">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </button>
+
+    <!-- Message - chats -->
+    <button class="rp-action-btn" id="rpMsgBtn" title="Mensagens">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+
+    <div style="flex:1; min-height:0;"></div>
+    <div class="rp-divider"></div>
+
+    <!-- Discord -->
+    <a class="rp-action-btn rp-social-btn" href="https://discord.gg/angelclient" target="_blank" title="Discord">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+    </a>
+
+    <!-- TikTok -->
+    <a class="rp-action-btn rp-social-btn" href="https://tiktok.com/@angelclient" target="_blank" title="TikTok">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+    </a>
+
+    <!-- X (Twitter) -->
+    <a class="rp-action-btn rp-social-btn" href="https://x.com/angelclient" target="_blank" title="X">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+
+    <!-- Instagram -->
+    <a class="rp-action-btn rp-social-btn" href="https://instagram.com/angelclient" target="_blank" title="Instagram">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+    </a>
+
+    <!-- Facebook -->
+    <a class="rp-action-btn rp-social-btn" href="https://facebook.com/angelclient" target="_blank" title="Facebook">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+    </a>
+
+    <!-- YouTube -->
+    <a class="rp-action-btn rp-social-btn" href="https://youtube.com/@angelclient" target="_blank" title="YouTube">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    </a>
+  </div>
+
+</div><!-- /glass-panel main -->
+<div class="modal-overlay invisible" id="addServerModal">
+  <div class="modal">
+    <div class="modal-title">Adicionar Servidor</div>
+    <div class="modal-sub">Adicione um servidor à sua lista rápida</div>
+    <div class="modal-field">
+      <label class="modal-label">Nome</label>
+      <input class="input" type="text" id="serverNameInput" placeholder="Meu Servidor"/>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Endereço</label>
+      <input class="input" type="text" id="serverAddrInput" placeholder="mc.servidor.com"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelServerBtn">Cancelar</button>
+      <button class="btn btn-primary" id="confirmServerBtn">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay invisible" id="deleteServerModal">
+  <div class="modal">
+    <div class="modal-title">Excluir Servidor</div>
+    <div class="modal-sub" id="deleteServerModalSub">Tem certeza que deseja excluir este servidor?</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelDeleteBtn">Cancelar</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADICIONAR AMIGO MODAL -->
+<div class="modal-overlay invisible" id="addFriendModal">
+  <div class="modal" style="width:300px;">
+    <div class="modal-title">Adicionar Amigo</div>
+    <div class="modal-sub">Digite o nick do jogador</div>
+    <input class="input" type="text" id="addFriendInput" placeholder="Nick do jogador..." style="width:100%;margin:10px 0;font-size:0.85em;" maxlength="16"/>
+    <div id="addFriendStatus" style="font-size:0.72em;color:var(--w30);min-height:18px;margin-bottom:6px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="addFriendCancelBtn">Cancelar</button>
+      <button class="btn btn-primary" id="addFriendConfirmBtn">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div class="modal-overlay invisible" id="chatModal">
+  <div class="modal chat-modal">
+    <div class="chat-modal-header">
+      <span class="chat-modal-title" id="chatModalTitle">Chat</span>
+      <span id="chatStatusDot" class="chat-status-dot" style="margin-left:8px;"></span>
+      <span id="chatStatusText" class="chat-status-text"></span>
+      <button class="btn btn-ghost btn-sm" id="chatCloseBtn" style="margin-left:auto;">✕</button>
+    </div>
+    <div class="chat-modal-msgs" id="chatMsgs">
+      <div class="chat-loading">Carregando...</div>
+    </div>
+    <div class="chat-modal-input-row">
+      <input class="input chat-input" type="text" id="chatInput" placeholder="Digite sua mensagem..." maxlength="500"/>
+      <button class="btn btn-primary chat-send-btn" id="chatSendBtn">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOLICITAÇÕES MODAL -->
+<div class="modal-overlay invisible" id="requestsModal">
+  <div class="modal requests-modal">
+    <div class="modal-title">Solicitações de Amizade</div>
+    <div class="modal-sub">Solicitações pendentes</div>
+    <div class="requests-list" id="requestsList">
+      <div class="requests-empty">Nenhuma solicitação pendente</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelRequestsBtn">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="ui.js"></script>
+<!-- ACCOUNT DROPDOWN (fora do glass-panel para não ser cortado pelo overflow:hidden) -->
+<div class="accounts" id="accountDropdown" style="display:none;"></div>
+<!-- PERFIL DROPDOWN -->
+<div class="rp-dropdown" id="rpProfileDropdown" style="display:none;">
+  <div class="rp-dropdown-header" id="rpProfileDropdownHeader">
+    <div class="rp-dropdown-avatar" id="rpDropdownAvatar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="rp-dropdown-name" id="rpDropdownName">—</div>
+      <div class="rp-dropdown-sub">Conta ativa</div>
+    </div>
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-dropdown-item" data-action="profile">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Perfil
+  </div>
+  <div class="rp-dropdown-item" data-action="settings">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Config. Conta
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-dropdown-item rp-dropdown-danger" data-action="logout">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sair da conta
+  </div>
+</div>
+<!-- NOTIFICAÇÕES DROPDOWN -->
+<div class="rp-dropdown rp-dropdown-notif" id="rpNotifDropdown" style="display:none;">
+  <div class="rp-dropdown-header">
+    <span style="font-size:0.82em; font-weight:600;">Notificações</span>
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-dropdown-empty">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span>Nenhuma notificação</span>
+  </div>
+</div>
+<!-- AMIGOS DROPDOWN -->
+<div class="rp-dropdown rp-dropdown-friends" id="rpFriendsDropdown" style="display:none;">
+  <div class="rp-dropdown-header">
+    <span style="font-size:0.82em; font-weight:600;">Amigos</span>
+    <button class="btn btn-ghost btn-sm" id="rpAddFriendBtn" style="margin-left:auto; font-size:0.7em;" title="Adicionar amigo">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Adicionar
+    </button>
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-dropdown-item" data-action="requests">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Solicitações recebidas
+    <span class="rp-badge" id="rpRequestsBadge" style="display:none; margin-left:auto;">0</span>
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-friends-list" id="rpFriendsList"></div>
+</div>
+<!-- MENSAGENS DROPDOWN -->
+<div class="rp-dropdown rp-dropdown-msgs" id="rpMsgDropdown" style="display:none;">
+  <div class="rp-dropdown-header">
+    <span style="font-size:0.82em; font-weight:600;">Mensagens</span>
+  </div>
+  <div class="rp-dropdown-divider"></div>
+  <div class="rp-msgs-list" id="rpMsgsList">
+    <div class="rp-dropdown-empty">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.3"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Nenhuma conversa</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

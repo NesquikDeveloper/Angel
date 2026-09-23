@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="log.css"/>
+</head>
+<body>
+	<div class="background-wrapper"></div>
+
+	<div class="drag-region"></div>
+
+	<div class="titlebar">
+		<div class="titlebar-left">
+			<div class="title-dot dot-red"></div>
+			<div class="title-dot dot-yellow"></div>
+			<div class="title-dot dot-green"></div>
+		</div>
+		<span class="titlebar-title">Bosta Client — Console</span>
+		<div class="titlebar-right">
+			<button class="btn-clear" id="clear-btn" title="Clear logs">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="3 6 5 6 21 6"/>
+					<path d="M19 6l-1 14H6L5 6"/>
+					<path d="M10 11v6M14 11v6"/>
+				</svg>
+			</button>
+			<button class="btn-scroll" id="scroll-btn" title="Auto scroll">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<polyline points="17 11 12 6 7 11"/>
+					<polyline points="17 18 12 13 7 18"/>
+				</svg>
+				Auto Scroll
+			</button>
+			<button class="btn-minimize" id="minimize-btn" title="Minimizar">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<line x1="5" y1="12" x2="19" y2="12"/>
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<div class="log-container" id="log-container">
+		<div class="log-welcome">
+			<div class="welcome-icon">
+				<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5">
+					<rect x="3" y="3" width="18" height="18" rx="2"/>
+					<path d="M8 10l2 2-2 2M12 14h4"/>
+				</svg>
+			</div>
+			<p>Aguardando Minecraft iniciar...</p>
+		</div>
+	</div>
+
+	<div class="statusbar">
+		<div class="status-left">
+			<span class="status-indicator" id="status-indicator"></span>
+			<span id="status-text">Parado</span>
+		</div>
+		<span id="log-count">0 linhas</span>
+	</div>
+
+	<script>
+		const container = document.getElementById('log-container');
+		const statusIndicator = document.getElementById('status-indicator');
+		const statusText = document.getElementById('status-text');
+		const logCount = document.getElementById('log-count');
+		const clearBtn = document.getElementById('clear-btn');
+		const scrollBtn = document.getElementById('scroll-btn');
+
+		let autoScroll = true;
+		let lineCount = 0;
+		let welcome = document.querySelector('.log-welcome');
+
+		// Toggle auto scroll
+		scrollBtn.addEventListener('click', () => {
+			autoScroll = !autoScroll;
+			scrollBtn.classList.toggle('active', autoScroll);
+		});
+		scrollBtn.classList.add('active');
+
+		// Clear logs
+		clearBtn.addEventListener('click', () => {
+			container.innerHTML = '';
+			lineCount = 0;
+			logCount.textContent = '0 linhas';
+		});
+
+		// Classify log level
+		function getLevel(line) {
+			const l = line.toLowerCase();
+			if (l.includes('[error]') || l.includes('error:') || l.includes('exception') || l.includes('fatal')) return 'error';
+			if (l.includes('[warn]') || l.includes('warning')) return 'warn';
+			if (l.includes('[info]')) return 'info';
+			if (l.includes('at ') && l.includes('.java:')) return 'trace';
+			return 'default';
+		}
+
+		function appendLog(line) {
+			if (welcome) { welcome.remove(); welcome = null; }
+
+			lineCount++;
+			const level = getLevel(line);
+
+			const el = document.createElement('div');
+			el.className = `log-line log-${level}`;
+
+			const num = document.createElement('span');
+			num.className = 'log-num';
+			num.textContent = lineCount;
+
+			const text = document.createElement('span');
+			text.className = 'log-text';
+			text.textContent = line;
+
+			el.appendChild(num);
+			el.appendChild(text);
+			container.appendChild(el);
+
+			logCount.textContent = `${lineCount} linha${lineCount !== 1 ? 's' : ''}`;
+
+			if (autoScroll) container.scrollTop = container.scrollHeight;
+		}
+
+		function setStatus(running) {
+			statusIndicator.className = 'status-indicator ' + (running ? 'running' : '');
+			statusText.textContent = running ? 'Rodando' : 'Parado';
+		}
+
+		// Listen from main process via IPC
+		if (window.require) {
+			const { ipcRenderer } = window.require('electron');
+
+			document.getElementById('minimize-btn').addEventListener('click', () => {
+				ipcRenderer.send('minimize-log');
+			});
+
+			ipcRenderer.on('log-line', (_, line) => {
+				appendLog(line);
+			});
+
+			ipcRenderer.on('game-started', () => {
+				setStatus(true);
+			});
+
+			ipcRenderer.on('game-stopped', () => {
+				setStatus(false);
+				appendLog('--- Minecraft encerrado ---');
+			});
+		}
+
+		// For testing in browser
+		if (!window.require) {
+			setTimeout(() => {
+				const testLogs = [
+					'[16:32:01] [main/INFO]: Loading Minecraft 1.8',
+					'[16:32:01] [main/INFO]: Setting user: Player123',
+					'[16:32:02] [main/INFO]: LWJGL Version: 2.9.4',
+					'[16:32:03] [main/WARN]: Missing texture for block: minecraft:stone',
+					'[16:32:04] [main/INFO]: Reloading ResourceManager',
+					'[16:32:05] [main/ERROR]: Failed to load shader: Invalid token',
+					'[16:32:06] [main/INFO]: Preparing start region for level 0',
+				];
+				setStatus(true);
+				testLogs.forEach((l, i) => setTimeout(() => appendLog(l), i * 200));
+			}, 800);
+		}
+	</script>
+</body>
+</html>

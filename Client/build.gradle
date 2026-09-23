@@ -1,0 +1,303 @@
+import com.google.gson.JsonParser
+import io.github.angelclient.gradle.CustomTweakerPlugin
+import net.md_5.specialsource.SpecialSource
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.commons.Remapper
+import org.objectweb.asm.commons.RemappingClassAdapter
+import org.objectweb.asm.tree.ClassNode
+
+import java.nio.file.Files
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://files.minecraftforge.net/maven" }
+        maven { url "https://repo.spongepowered.org/maven" }
+        maven { url "https://plugins.gradle.org/m2" }
+    }
+    dependencies {
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
+    }
+}
+
+apply plugin: CustomTweakerPlugin
+apply plugin: "org.spongepowered.mixin"
+apply plugin: "java"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+def launchWrapperTweakClass = "io.github.angelclient.client.tweak.Tweaker"
+
+minecraft {
+    version = "1.8.9"
+    tweakClass = launchWrapperTweakClass
+    mappings = "stable_22"
+    runDir = "run"
+    clientRunArgs = ["--username", "AngelTesTer"]
+    makeObfSourceJar = false
+}
+
+def lwjglVersion = "3.2.3"
+
+repositories {
+    mavenCentral()
+    maven { url "https://libraries.minecraft.net" }
+    maven {
+        name "Sponge"
+        url "https://repo.spongepowered.org/maven"
+    }
+    maven { url "https://repo.codemc.io/repository/maven-public" }
+    maven { url "https://repo.hypixel.net/repository/Hypixel" }
+    maven { url "https://jitpack.io" }
+}
+
+
+
+
+
+configurations {
+    dependency
+    implementation.extendsFrom(dependency)
+    runtime.extendsFrom(dependency)
+    ship
+    natives
+}
+
+
+
+dependencies {
+    compileOnly "org.projectlombok:lombok:1.18.20"
+    annotationProcessor "org.projectlombok:lombok:1.18.20"
+    annotationProcessor "org.spongepowered:mixin:0.7.11-SNAPSHOT"
+    annotationProcessor files("replaymod/replaymod-1.8.9-2.6.3-runtime.jar")
+
+    dependency("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
+        exclude module: "launchwrapper"
+        exclude module: "guava"
+        exclude module: "gson"
+        exclude module: "commons-io"
+    }
+
+    dependency "org.slick2d:slick2d-core:1.0.2"
+    ship files("libs/occlusionculling.jar")
+    dependency "net.hypixel:hypixel-api-core:4.0"
+
+    dependency files("replaymod/replaymod-1.8.9-2.6.3-runtime.jar")
+    ship files("replaymod/replaymod-1.8.9-2.6.3-runtime.jar")
+
+    dependency("com.github.JnCrMx:discord-game-sdk4j:v0.5.5") {
+        exclude group: "net.java.dev.jna"
+    }
+
+    dependency "org.java-websocket:Java-WebSocket:1.5.3"
+
+    dependency "mysql:mysql-connector-java:5.1.49"
+    ship "mysql:mysql-connector-java:5.1.49"
+
+    compileOnly "org.lwjgl:lwjgl:${lwjglVersion}"
+    compileOnly "org.lwjgl:lwjgl-nanovg:${lwjglVersion}"
+
+    ship "org.lwjgl:lwjgl:${lwjglVersion}"
+    ship "org.lwjgl:lwjgl-nanovg:${lwjglVersion}"
+    ship "org.lwjgl:lwjgl:${lwjglVersion}:natives-windows"
+    ship "org.lwjgl:lwjgl-nanovg:${lwjglVersion}:natives-windows"
+    ship "org.lwjgl:lwjgl:${lwjglVersion}:natives-linux"
+    ship "org.lwjgl:lwjgl-nanovg:${lwjglVersion}:natives-linux"
+    ship "org.lwjgl:lwjgl:${lwjglVersion}:natives-macos"
+    ship "org.lwjgl:lwjgl-nanovg:${lwjglVersion}:natives-macos"
+}
+
+mixin {
+    add sourceSets.main, "mixins.angelclient.refmap.json"
+    add sourceSets.main, "refmap.raven.json"
+}
+
+runClient {
+    outputs.upToDateWhen { false }
+
+    // Desativa o OpenAL do LWJGL2 para evitar crash nativo com Java 8 recente
+    // O som ainda funciona via fallback do Minecraft
+    jvmArgs "-Dorg.lwjgl.openal.libname=none"
+
+    // Aumenta memória para evitar OOM durante carregamento
+    jvmArgs "-Xmx3G"
+    jvmArgs "-Xms512m"
+
+    jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+}
+
+def loadVersion() {
+    def props = new Properties()
+    def f = file("version.properties")
+    if (f.exists()) {
+        f.withInputStream { props.load(it) }
+    }
+    return props.getProperty("version", "0.0")
+}
+
+def clientVersion = loadVersion()
+
+jar {
+    archiveName = "client-${clientVersion}.jar"
+
+    manifest {
+        attributes(
+                "Manifest-Version": "1.0",
+                "Main-Class": "net.minecraft.launchwrapper.Launch",
+                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": "0",
+                "MixinConfigs": "mixins.angelclient.json,mixins.raven.json",
+                "Class-Path": "techjar/driver/usb/JInputUSBDriver.jar"
+        )
+    }
+
+    from {
+        configurations.ship.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "META-INF/INDEX.LIST"
+        exclude "META-INF/versions/**"
+        exclude "module-info.class"
+        exclude "META-INF/MANIFEST.MF"
+        exclude "mixins.core.replaymod.json"
+        exclude "mixins.recording.replaymod.json"
+        exclude "mixins.replay.replaymod.json"
+        exclude "mixins.nonmmlauncher.replaymod.json"
+        exclude "mixins.replaymod.refmap.json"
+        exclude "mixins.nonmmlauncher.replaymod.refmap.json"
+        exclude "mixins.render.replaymod.json"
+        exclude "mixins.render.blend.replaymod.json"
+        exclude "mixins.compat.shaders.replaymod.json"
+        exclude "mixins.extras.playeroverview.replaymod.json"
+        exclude "mixins.jgui.json"
+        exclude "mixins.jgui.refmap.json"
+    }
+}
+
+task buildBostaClient(type: Copy, dependsOn: "reobfJar") {
+    from jar.archivePath
+    into "${project.rootDir}/../build"
+    doLast {
+        copy {
+            from "version.properties"
+            into "${project.rootDir}/../build"
+        }
+    }
+}
+
+// Task to remove problematic replaymod mixins that reference Forge APIs
+task cleanProblematicMixins {
+    doLast {
+        def problematicFiles = [
+            "build/sources/main/java/com/replaymod/recording/mixin/MixinNetworkDispatcher.java",
+            "build/sources/main/java/net/minecraftforge",
+            "build/sources/main/java/io/github/angelclient/client/BostaClientMod.java"
+        ]
+        
+        problematicFiles.each { filePath ->
+            def file = new File(filePath)
+            if(file.exists()) {
+                if(file.isDirectory()) {
+                    file.deleteDir()
+                    println "Removed problematic directory: ${filePath}"
+                } else {
+                    file.delete()
+                    println "Removed problematic file: ${filePath}"
+                }
+            }
+        }
+    }
+}
+
+// Run cleanup before compilation
+compileJava.dependsOn cleanProblematicMixins
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+// Patch generated refmap with @Shadow field entries that the annotation processor doesn't generate
+task patchRefmap {
+    doLast {
+        def refmapFile = file("${buildDir}/tmp/compileJava/mixins.angelclient.refmap.json")
+        def refmapFile2 = file("${buildDir}/tmp/compileJava/compileJava-refmap.json")
+        def shadowFields = [
+            "currentScreen": "field_71462_R:Lnet/minecraft/client/gui/GuiScreen;",
+            "gameSettings": "field_71474_y:Lnet/minecraft/client/settings/GameSettings;",
+            "theWorld": "field_71441_e:Lnet/minecraft/client/multiplayer/WorldClient;",
+            "thePlayer": "field_71439_g:Lnet/minecraft/client/entity/EntityPlayerSP;",
+            "currentServerData": "field_71451_h:Lnet/minecraft/client/multiplayer/ServerData;",
+            "ingameGUI": "field_71456_v:Lnet/minecraft/client/gui/GuiIngame;",
+            "renderManager": "field_175618_a:Lnet/minecraft/client/renderer/entity/RenderManager;",
+            "playerController": "field_71467_ac:Lnet/minecraft/client/multiplayer/PlayerControllerMP;",
+            "renderEngine": "field_110451_am:Lnet/minecraft/client/renderer/texture/TextureManager;",
+            "fullscreen": "field_71413_Z:Z",
+            "leftClickCounter": "field_71429_W:I"
+        ]
+        [refmapFile, refmapFile2].each { f ->
+            if (f.exists()) {
+                def json = new groovy.json.JsonSlurper().parse(f)
+                def mixin = json.mappings."io/github/angelclient/client/mixin/client/MixinMinecraft"
+                shadowFields.each { k, v ->
+                    if (!mixin.containsKey(k)) {
+                        mixin[k] = v
+                        println "Patched refmap: added ${k}"
+                    }
+                }
+                // Fix MixinFastRecraftMod refmap - initGui is inherited from
+                // GuiScreen, not declared in GuiContainer
+                def fastRecraft = json.mappings."io/github/angelclient/client/mixin/mod/MixinFastRecraftMod"
+                if (fastRecraft != null) {
+                    def initGui = fastRecraft."initGui"
+                    if (initGui != null) {
+                        fastRecraft."initGui" = initGui.replace(
+                            "Lnet/minecraft/client/gui/inventory/GuiContainer;",
+                            "Lnet/minecraft/client/gui/GuiScreen;"
+                        )
+                        println "Patched refmap: fixed MixinFastRecraftMod.initGui owner to GuiScreen"
+                    }
+                }
+                f.withWriter { writer ->
+                    writer.write(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json)))
+                }
+            }
+        }
+    }
+}
+
+compileJava.finalizedBy patchRefmap
+
+task patchOutputRefmap {
+    doLast {
+        def outputRefmap = file("${buildDir}/resources/main/mixins.angelclient.refmap.json")
+        if (outputRefmap.exists()) {
+            def json = new groovy.json.JsonSlurper().parse(outputRefmap)
+            def fastRecraft = json.mappings."io/github/angelclient/client/mixin/mod/MixinFastRecraftMod"
+            if (fastRecraft != null) {
+                def initGui = fastRecraft."initGui"
+                if (initGui != null && initGui.contains("GuiContainer;")) {
+                    fastRecraft."initGui" = initGui.replace(
+                        "Lnet/minecraft/client/gui/inventory/GuiContainer;",
+                        "Lnet/minecraft/client/gui/GuiScreen;"
+                    )
+                    outputRefmap.withWriter { writer ->
+                        writer.write(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json)))
+                    }
+                    println "Patched output refmap: fixed MixinFastRecraftMod.initGui owner to GuiScreen"
+                }
+            }
+        }
+    }
+}
+
+processResources.finalizedBy patchOutputRefmap
